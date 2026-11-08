@@ -1,0 +1,5 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>OA Lab · Sign in</title>
+<style>body{font:16px system-ui;background:#f3f5f7;color:#17243a;max-width:440px;margin:10vh auto}main{background:white;padding:32px;border-radius:12px}input,button{padding:10px;box-sizing:border-box;width:100%;margin:8px 0}button{background:#173a65;color:white;border:0;cursor:pointer}</style></head>
+<body><main><h1>Repository lab</h1><p>Sign in to reproduce the reported behavior.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<input type="hidden" name="next" value="{{ next }}"><button>Sign in</button></form>
+<p>Local demo: alice / bob / admin<br>Password: <code>DemoPass123!</code></p></main></body></html>

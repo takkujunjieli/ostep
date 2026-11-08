@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ title }}</title>
+<style>body{font:15px system-ui;background:#f4f6f9;color:#142640;max-width:1100px;margin:24px auto;padding:0 20px}header{display:flex;align-items:center;justify-content:space-between}main{display:grid;grid-template-columns:1fr 1fr;gap:20px}section{background:white;padding:24px;border-radius:10px;border:1px solid #dce3eb}label{display:block;margin:12px 0 5px}input,select,textarea{font:inherit;padding:8px;box-sizing:border-box;width:100%;border:1px solid #bbc6d4;border-radius:4px}button{font:inherit;padding:9px 14px;background:#173a65;color:white;border:0;border-radius:4px;cursor:pointer;margin-top:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf1f6;padding:14px;max-height:460px;overflow:auto}small{color:#52647c}#status{position:sticky;top:0;padding:12px;background:#e5edf8;min-height:20px}h2{margin-top:0}@media(max-width:700px){main{grid-template-columns:1fr}}</style></head>
+<body><header><div><small>LOCAL REPOSITORY PRACTICE</small><h1>{{ title }}</h1></div><form method="post" action="/logout/">{% csrf_token %}{{ user.username }} <button>Sign out</button></form></header>
+<p>{{ description }}</p><div id="status" role="status">Ready. Read TASK.md, then reproduce a ticket.</div><br>
+<main>{{ panels|safe }}<section><h2>Current data</h2><button type="button" onclick="loadState()">Refresh data</button><pre id="state">Loading…</pre></section></main>
+<script>
+const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+async function callAPI(url, method='GET', body) {
+ const response = await fetch(url, {method, headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:body===undefined?undefined:JSON.stringify(body)});
+ const content = await response.text(); let data; try{data=JSON.parse(content)}catch{data=content.slice(0,500)}
+ document.getElementById('status').textContent = response.status+' '+JSON.stringify(data);
+ return data;
+}
+async function loadState(){
+ try{const response=await fetch('/api/state/');document.getElementById('state').textContent=JSON.stringify(await response.json(),null,2)}
+ catch(error){document.getElementById('state').textContent=String(error)}
+}
+document.querySelectorAll('form[data-api]').forEach(form => form.addEventListener('submit',async event=>{
+ event.preventDefault(); const data={}; new FormData(form).forEach((value,key)=>{const el=form.elements.namedItem(key); data[key]=el?.dataset.type==='number'?Number(value):value});
+ let url=form.dataset.api.replace(/\{(\w+)\}/g,(_,key)=>encodeURIComponent(data[key]));
+ if(data.cast_ids!==undefined)data.cast_ids=String(data.cast_ids).split(',').map(x=>Number(x.trim())).filter(Boolean);
+ const method=form.dataset.method||'POST';
+ if(method==='GET')url+='?'+new URLSearchParams(data);
+ try{await callAPI(url,method,method==='POST'?data:undefined);await loadState()}catch(error){document.getElementById('status').textContent=String(error)}
+}));loadState();
+</script></body></html>
